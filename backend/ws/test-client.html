@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Multi-Room Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+        }
+        #messages {
+            border: 1px solid #ddd;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        .system {
+            color: blue;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Multi-Room Test Client</h1>
+    
+    <div class="container">
+        <h3>Connection</h3>
+        <input type="text" id="roomId" placeholder="Room ID (optional)" value="room1">
+        <input type="text" id="token" placeholder="Token" value="test-token">
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <p>Status: <span id="status">Disconnected</span></p>
+    </div>
+
+    <div class="container">
+        <h3>Room Actions</h3>
+        <input type="text" id="joinRoomId" placeholder="Room ID to join" value="room1">
+        <button onclick="joinRoom()">Join Room</button>
+        <br>
+        <input type="text" id="leaveRoomId" placeholder="Room ID to leave" value="room1">
+        <button onclick="leaveRoom()">Leave Room</button>
+    </div>
+
+    <div class="container">
+        <h3>Send Message</h3>
+        <input type="text" id="messageRoomId" placeholder="Room ID" value="room1">
+        <input type="text" id="messageContent" placeholder="Message content" value="Hello!">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div class="container">
+        <h3>Messages</h3>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let ws = null;
+
+        function log(message, type = 'message') {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            messagesDiv.appendChild(messageEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function connect() {
+            const roomId = document.getElementById('roomId').value;
+            const token = document.getElementById('token').value;
+            
+            let url = `ws://localhost:3000?token=${token}`;
+            if (roomId) {
+                url += `&roomId=${roomId}`;
+            }
+
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                document.getElementById('status').textContent = 'Connected';
+                log('Connected to server', 'system');
+            };
+
+            ws.onmessage = (event) => {
+                log(`Received: ${event.data}`, 'message');
+            };
+
+            ws.onclose = (event) => {
+                document.getElementById('status').textContent = 'Disconnected';
+                log(`Disconnected: ${event.code} - ${event.reason}`, 'system');
+            };
+
+            ws.onerror = (error) => {
+                log(`Error: ${error}`, 'error');
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function joinRoom() {
+            const roomId = document.getElementById('joinRoomId').value;
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('Not connected!', 'error');
+                return;
+            }
+            const message = {
+                type: 'JOIN',
+                roomId: roomId
+            };
+            ws.send(JSON.stringify(message));
+            log(`Sent JOIN request for room: ${roomId}`, 'system');
+        }
+
+        function leaveRoom() {
+            const roomId = document.getElementById('leaveRoomId').value;
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('Not connected!', 'error');
+                return;
+            }
+            const message = {
+                type: 'LEAVE',
+                roomId: roomId
+            };
+            ws.send(JSON.stringify(message));
+            log(`Sent LEAVE request for room: ${roomId}`, 'system');
+        }
+
+        function sendMessage() {
+            const roomId = document.getElementById('messageRoomId').value;
+            const content = document.getElementById('messageContent').value;
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('Not connected!', 'error');
+                return;
+            }
+            const message = {
+                type: 'MESSAGE',
+                roomId: roomId,
+                content: content
+            };
+            ws.send(JSON.stringify(message));
+            log(`Sent MESSAGE to room ${roomId}: ${content}`, 'system');
+        }
+    </script>
+</body>
+</html>

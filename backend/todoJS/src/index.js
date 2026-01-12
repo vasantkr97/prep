@@ -72,7 +72,6 @@ app.post("/signin", (req, res) => {
     })
 })
 
-
 app.post("/createTodo", (req, res) => {
     const { userId, title, description, completed } = req.body
 
@@ -101,7 +100,6 @@ app.post("/createTodo", (req, res) => {
     })
 });
 
-
 app.put("/updateTodo/:id", (req, res) => {
     const { userId, title, description, completed } = req.body;
     const todoId = Number(req.params.id);
@@ -123,7 +121,6 @@ app.put("/updateTodo/:id", (req, res) => {
         msg: "todo updated successfully"
     })
 })
-
 
 app.get("/getallTodo", (req, res) => {
      const userId =  Number(req.query.userId)
