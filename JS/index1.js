@@ -82,3 +82,25 @@
 // obj.person()
 
 
+
+//Event Emitter
+
+class EventEmitter {
+    constructor() {
+        this.events = {}
+    }
+
+    on(eventName, handler) {
+        if (!this.events[eventName]) {
+            this.eventName = []
+        }
+        this.events[eventName] = handler
+    }
+
+    emit(eventName, ...args) {
+        const handlers = this.events[eventName] || []
+        for (const handler of handlers) {
+            handler(...args)
+        }
+    }
+}

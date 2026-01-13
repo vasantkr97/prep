@@ -34,6 +34,7 @@ wss.on("connection", (ws: ExtWebSocket, req) => {
 
     ws.on("message", (data) => {
         const message = JSON.parse(data.toString())
+        console.log(message)
 
         switch (message.type) {
             case "JOIN":
@@ -64,6 +65,7 @@ function joinRoom(ws: ExtWebSocket, roomId: string) {
 
     rooms.get(roomId)?.add(ws);
     ws.rooms.add(roomId)
+    console.log(rooms)
 }
 
 function leaveRoom(ws: ExtWebSocket, roomId: string) {
